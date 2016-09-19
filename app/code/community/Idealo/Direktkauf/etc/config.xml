@@ -1,0 +1,86 @@
+<?xml version="1.0"?><!--
+/**
+ *
+ * Copyright 2016 idealo internet GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<config>
+    <modules>
+        <Idealo_Direktkauf>
+            <version>1.0.1</version>
+        </Idealo_Direktkauf>
+    </modules>
+    
+    <global>
+        <blocks>
+            <idealo_direktkauf>
+                <class>Idealo_Direktkauf_Block</class>
+            </idealo_direktkauf>
+        </blocks>
+        <helpers>
+            <idealo_direktkauf>
+                <class>Idealo_Direktkauf_Helper</class>
+            </idealo_direktkauf>
+        </helpers>
+        <models>
+            <idealo_direktkauf>
+                <class>Idealo_Direktkauf_Model</class>
+            </idealo_direktkauf>
+        </models>
+        <resources>
+            <idealo_direktkauf_setup>
+                <setup>
+                    <module>Idealo_Direktkauf</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </idealo_direktkauf_setup>
+        </resources>
+    </global>
+    
+    <adminhtml>
+        <translate>
+            <modules>
+                <Idealo_Direktkauf>
+                    <files>
+                        <default>Idealo_Direktkauf.csv</default>
+                    </files>
+                </Idealo_Direktkauf>
+            </modules>
+        </translate>
+    </adminhtml>
+    
+    <crontab>
+        <jobs>
+            <idealo_direktkauf_cronjob_importorders>
+                <schedule>
+                    <cron_expr>0 * * * *</cron_expr><!-- Run every hour at minute 0 -->
+                </schedule>
+                <run>
+                    <model>idealo_direktkauf/cronjobs_importOrders::start</model>
+                </run>
+            </idealo_direktkauf_cronjob_importorders>
+            <idealo_direktkauf_cronjob_sendstatus>
+                <schedule>
+                    <cron_expr>10 * * * *</cron_expr><!-- Run every hour at minute 10 -->
+                </schedule>
+                <run>
+                    <model>idealo_direktkauf/cronjobs_sendStatus::start</model>
+                </run>
+            </idealo_direktkauf_cronjob_sendstatus>
+        </jobs>
+    </crontab>
+</config>

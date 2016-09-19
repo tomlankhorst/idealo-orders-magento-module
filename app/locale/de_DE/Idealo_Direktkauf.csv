@@ -1,0 +1,27 @@
+"Basic configuration","Grundkonfiguration"
+"Mode","Modus"
+"Authorization-token","Authentifizierungs-Token"
+"Error-email-address","Error-Email-Adresse"
+"Value for cancellation-reason","Als Stornierungsgrund &uuml;bermittelter Wert"
+"Logging active","Logging aktiv"
+"Not used","Nicht verwendet"
+"Other","Anderer"
+
+"Mappings","Zuweisungen"
+"Payment mapping","Zahlarten Zuweisung"
+"Delivery mapping","Lieferoptionen Zuweisung"
+
+"Check configuration","Konfiguration pr&uuml;fen"
+
+"The configuration is complete!","Die Konfiguration ist vollst&auml;ndig!"
+"Please enter an authorization-token!","Bitte geben Sie einen Authentifizierungs-Token ein!"
+"No connection could be established with this token!","Es konnte keine Verbindung aufgebaut werden mit diesem Token!"
+"Please enter an email-address for error-mails!","Bitte geben Sie eine Email-Adresse f&uuml;r Errors ein!"
+
+"Customer-revocation","Kunden-Widerruf"
+"Rejected by merchant","Vom H&auml;ndler abgelehnt"
+"Return","Retoure"
+
+"-- Please Select --","-- Bitte w&auml;hlen --"
+"Yes","Ja"
+"No","Nein"

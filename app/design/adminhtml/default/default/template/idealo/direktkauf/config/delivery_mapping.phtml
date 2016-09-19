@@ -1,0 +1,48 @@
+<?php
+/*
+   Copyright 2016 idealo internet GmbH
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+$aIdealoDeliveryTypes = $this->getIdealoDeliveryTypes();
+$aShopDeliveryTypes = $this->getShopDeliveryTypes();
+$aDeliveryCarriers = $this->getIdealoDeliveryCarriers();
+?>
+<table>
+    <?php foreach ($aIdealoDeliveryTypes as $sKey => $sTitle) { ?>
+        <tr>
+            <td>
+                <select name="<?php echo $this->getElement()->getName(); ?>[<?php echo $sKey; ?>][type]" style="width:222px;">
+                    <option value=""><?php echo Mage::helper('adminhtml')->__('-- Please Select --'); ?></option>
+                    <option value="0" <?php if($this->getValueByTypeKey($sKey) == "0") echo 'selected'; ?>><?php echo Mage::helper('idealo_direktkauf')->__('Not used'); ?></option>
+                    <?php foreach ($aShopDeliveryTypes as $sShopDelKey => $sShopDelTitle) { ?>
+                        <option value="<?php echo $sShopDelKey; ?>" <?php if($this->getValueByTypeKey($sKey) == $sShopDelKey) echo 'selected'; ?>><?php echo $sShopDelTitle; ?></option>
+                    <?php } ?>
+                </select>
+            </td>
+            <td>
+                <select name="<?php echo $this->getElement()->getName(); ?>[<?php echo $sKey; ?>][carrier]" style="width:130px;">
+                    <option value=""><?php echo Mage::helper('adminhtml')->__('-- Please Select --'); ?></option>
+                    <option value="0" <?php if($this->getValueByCarrierKey($sKey) == "0") echo 'selected'; ?>><?php echo Mage::helper('idealo_direktkauf')->__('Not used'); ?></option>
+                    <?php foreach ($aDeliveryCarriers as $sCarrierKey => $sCarrierTitle) { ?>
+                        <option value="<?php echo $sCarrierKey; ?>" <?php if($this->getValueByCarrierKey($sKey) == $sCarrierKey) echo 'selected'; ?>><?php echo $sCarrierTitle; ?></option>
+                    <?php } ?>
+                </select>                
+            </td>
+            <td>
+                <div style="margin-left:5px;width: 60px;"><?php echo $sTitle; ?></div>
+            </td>
+        </tr>
+    <?php } ?>
+</table>
