@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<layout version="1.0">
+    <adminhtml_sales_order_view>
+        <reference name="order_info">
+            <block 
+                type="idealo_direktkauf/adminhtml_order_info" 
+                name="idealo.direktkauf.order.info.block" 
+                template="idealo/direktkauf/order/info.phtml" 
+                before="order_history" />
+        </reference>
+    </adminhtml_sales_order_view>
+</layout>

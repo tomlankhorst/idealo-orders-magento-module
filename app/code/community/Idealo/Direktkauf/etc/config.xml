@@ -19,7 +19,7 @@
 <config>
     <modules>
         <Idealo_Direktkauf>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
         </Idealo_Direktkauf>
     </modules>
     
@@ -61,6 +61,23 @@
                 </Idealo_Direktkauf>
             </modules>
         </translate>
+        <layout>
+            <updates>
+                <idealo_direktkauf>
+                    <file>idealo.xml</file>
+                </idealo_direktkauf>
+            </updates>
+        </layout>
+        <events>
+            <core_block_abstract_to_html_after>
+                <observers>
+                    <idealo_direktkauf_order_info>
+                        <class>idealo_direktkauf/observer</class>
+                        <method>getSalesOrderViewInfo</method>
+                    </idealo_direktkauf_order_info>
+                </observers>
+            </core_block_abstract_to_html_after>
+        </events>
     </adminhtml>
     
     <crontab>

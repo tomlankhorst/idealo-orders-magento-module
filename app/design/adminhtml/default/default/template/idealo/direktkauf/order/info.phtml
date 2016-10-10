@@ -1,0 +1,14 @@
+<?php $sIdealoOrderNr = $this->getIdealoOrderNr() ?>
+<?php if ($sIdealoOrderNr) { ?>
+    <div class="entry-edit box-left">
+        <div class="entry-edit-head">
+            <h4 class="icon-head"><?php echo $this->__('idealo Direktkauf') ?></h4>
+        </div>
+        <fieldset>
+            <div id="mymodule_custom_block">
+                <?php echo $this->__('idealo order nr') ?>: <?php echo $sIdealoOrderNr; ?>
+            </div>
+        </fieldset>
+    </div>
+    <div class="clear"></div>
+<?php } ?>

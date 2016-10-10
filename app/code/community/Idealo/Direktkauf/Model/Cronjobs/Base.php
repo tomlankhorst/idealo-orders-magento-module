@@ -182,7 +182,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
         if ($sResponse === false && $oClient->getCurlError() != '') {
             $this->_sendRevocationErrorMail($sIdealoOrderNr, $oClient);
         } else {
-            $this->_writeLogEntry('Sended revoke status to Idealo for IdealoOrderNr: '.$sIdealoOrderNr.' with message: '.$sMessage, Zend_Log::INFO);
+            $this->_writeLogEntry('Sent revoke status to Idealo for IdealoOrderNr: '.$sIdealoOrderNr.' with message: '.$sMessage, Zend_Log::INFO);
         }
     }
     

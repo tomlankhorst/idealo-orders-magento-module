@@ -4,7 +4,7 @@
 Apache License 2.0, see LICENSE
 
 ## Version
-v1.0.1 2016-09-15
+v1.0.2 2016-10-10
 
 ## Link
 http://direktkauf.idealo.de
