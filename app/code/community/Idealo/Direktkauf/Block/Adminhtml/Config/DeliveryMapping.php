@@ -18,7 +18,8 @@
 /**
  * Delivery mapping block for admin config
  */
-class Idealo_Direktkauf_Block_Adminhtml_Config_DeliveryMapping extends Mage_Adminhtml_Block_System_Config_Form_Field_Array_Abstract
+class Idealo_Direktkauf_Block_Adminhtml_Config_DeliveryMapping 
+    extends Mage_Adminhtml_Block_System_Config_Form_Field_Array_Abstract
 {
 
     /**
@@ -76,10 +77,13 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_DeliveryMapping extends Mage_Admi
      */
     protected function _prepareToRender()
     {
-        $this->addColumn('not needed', array(
-            'label' =>'A',
-            'style' => '',
-        ));
+        $this->addColumn(
+            'not needed', 
+            array(
+                'label' =>'A',
+                'style' => '',
+            )
+        );
         parent::_prepareToRender();
     }
     
@@ -127,6 +131,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_DeliveryMapping extends Mage_Admi
         if (isset($aValue[$sKey]['type'])) {
             return $aValue[$sKey]['type'];
         }
+        
         return false;
     }
     
@@ -142,6 +147,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_DeliveryMapping extends Mage_Admi
         if (isset($aValue[$sKey]['carrier'])) {
             return $aValue[$sKey]['carrier'];
         }
+        
         return false;
     }
 

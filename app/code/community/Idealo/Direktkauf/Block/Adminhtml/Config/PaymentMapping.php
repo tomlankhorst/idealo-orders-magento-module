@@ -18,7 +18,8 @@
 /**
  * Payment mapping block class for admin config
  */
-class Idealo_Direktkauf_Block_Adminhtml_Config_PaymentMapping extends Mage_Adminhtml_Block_System_Config_Form_Field_Array_Abstract
+class Idealo_Direktkauf_Block_Adminhtml_Config_PaymentMapping 
+    extends Mage_Adminhtml_Block_System_Config_Form_Field_Array_Abstract
 {
 
     /**
@@ -50,10 +51,13 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_PaymentMapping extends Mage_Admin
      */
     protected function _prepareToRender()
     {
-        $this->addColumn('not needed', array(
-            'label' =>'',
-            'style' => '',
-        ));
+        $this->addColumn(
+            'not needed', 
+            array(
+                'label' =>'',
+                'style' => '',
+            )
+        );
         parent::_prepareToRender();
     }
     
@@ -69,6 +73,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_PaymentMapping extends Mage_Admin
         if (!is_array($aTypes) || count($aTypes) == 0) {
             $aTypes = $this->_aDefaultIdealoPaymentTypes;
         }
+        
         return $aTypes;
     }
     
@@ -94,6 +99,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_PaymentMapping extends Mage_Admin
         if (isset($aValue[$sKey])) {
             return $aValue[$sKey];
         }
+        
         return false;
     }
 

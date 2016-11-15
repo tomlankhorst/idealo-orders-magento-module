@@ -2,7 +2,7 @@
 "Mode","Modus"
 "Authorization-token","Authentifizierungs-Token"
 "Error-email-address","Error-Email-Adresse"
-"Value for cancellation-reason","Als Stornierungsgrund &uuml;bermittelter Wert"
+"Value for cancellation-reason","Als Stornierungsgrund übermittelter Wert"
 "Logging active","Logging aktiv"
 "Not used","Nicht verwendet"
 "Other","Anderer"
@@ -11,19 +11,36 @@
 "Payment mapping","Zahlarten Zuweisung"
 "Delivery mapping","Lieferoptionen Zuweisung"
 
-"Check configuration","Konfiguration pr&uuml;fen"
+"Check configuration","Konfiguration prüfen"
 
-"The configuration is complete!","Die Konfiguration ist vollst&auml;ndig!"
+"The configuration is complete!","Die Konfiguration ist vollständig!"
 "Please enter an authorization-token!","Bitte geben Sie einen Authentifizierungs-Token ein!"
 "No connection could be established with this token!","Es konnte keine Verbindung aufgebaut werden mit diesem Token!"
-"Please enter an email-address for error-mails!","Bitte geben Sie eine Email-Adresse f&uuml;r Errors ein!"
+"Please enter an email-address for error-mails!","Bitte geben Sie eine Email-Adresse für Errors ein!"
 
 "Customer-revocation","Kunden-Widerruf"
-"Rejected by merchant","Vom H&auml;ndler abgelehnt"
+"Rejected by merchant","Vom Händler abgelehnt"
 "Return","Retoure"
 
-"-- Please Select --","-- Bitte w&auml;hlen --"
+"-- Please Select --","-- Bitte wählen --"
 "Yes","Ja"
 "No","Nein"
 
 "idealo order nr","idealo Bestellnummer"
+
+"TWO_MAN_DELIVERY","Zwei Mann Lieferung"
+"PICKUP_SERVICE","Abholservice"
+
+"Fulfillment options","Lieferoptionen"
+"Transaction id","Transaktions-Id"
+"Versions","Versionen"
+"Testing","Testen"
+"Order import","Bestell-Import"
+"Start import","Import starten"
+
+"New Order Status","Import-Bestellstatus"
+
+"Active","Aktiv"
+"Imports won't be started when deactivated. Important for multistore mode.","Wenn deaktiviert, werden die Importe nicht gestartet für diesen Store. Wichtig für den Multistore Modus."
+"Multistore mode","Multistore Modus"
+"IDEALO_MULTISTORE_MODE","Nein: Alles wird in den Standard-Store importiert.<br>Ja: Sie müssen den Import für jeden Shop-Ansicht korrekt konfigurieren."

@@ -21,11 +21,11 @@
 class Idealo_Direktkauf_Block_Adminhtml_Order_Info extends Mage_Core_Block_Template
 {
 
-    protected $order;
+    protected $_order;
     
     public function getOrder() 
     {
-        if (is_null($this->order)) {
+        if ($this->_order === null) {
             if (Mage::registry('current_order')) {
                 $order = Mage::registry('current_order');
             } elseif (Mage::registry('order')) {
@@ -33,9 +33,11 @@ class Idealo_Direktkauf_Block_Adminhtml_Order_Info extends Mage_Core_Block_Templ
             } else {
                 $order = new Varien_Object();
             }
-            $this->order = $order;
+            
+            $this->_order = $order;
         }
-        return $this->order;
+        
+        return $this->_order;
     }
     
     public function getIdealoOrderNr()
@@ -47,7 +49,50 @@ class Idealo_Direktkauf_Block_Adminhtml_Order_Info extends Mage_Core_Block_Templ
                 return $sIdealoOrderNr;
             }
         }
+        
         return false;
+    }
+    
+    public function getFulfillmentOptions()
+    {
+        $aOptions = array();
+        
+        $oOrder = $this->getOrder();
+        if ($oOrder) {
+            $sDelimiter = ';';
+            $sCurrency = $oOrder->getOrderCurrencyCode();
+            
+            $sFulfillmentTypes = $oOrder->getIdealoFulfillmentType();
+            $sFulfillmentPrices = $oOrder->getIdealoFulfillmentPrice();
+            
+            $aFulfillmentTypes = explode($sDelimiter, $sFulfillmentTypes);
+            $aFulfillmentPrices = explode($sDelimiter, $sFulfillmentPrices);
+            
+            for ($i = 0; $i < count($aFulfillmentTypes); $i++) {
+                $aOptions[] = array(
+                    'type' => $aFulfillmentTypes[$i],
+                    'price' => $aFulfillmentPrices[$i],
+                    'currency' => $sCurrency,
+                );
+            }
+        }
+        
+        return $aOptions;
+    }
+    
+    public function getPaymentTransactionId()
+    {
+        $oOrder = $this->getOrder();
+        if (!$oOrder) {
+            return false;
+        }
+        
+        $oPayment = $oOrder->getPayment();
+        if (!$oPayment) {
+            return false;
+        }
+        
+        return $oPayment->getLastTransId();
     }
 
 }

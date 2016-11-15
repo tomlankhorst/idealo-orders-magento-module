@@ -5,8 +5,31 @@
             <h4 class="icon-head"><?php echo $this->__('idealo Direktkauf') ?></h4>
         </div>
         <fieldset>
-            <div id="mymodule_custom_block">
-                <?php echo $this->__('idealo order nr') ?>: <?php echo $sIdealoOrderNr; ?>
+            <div id="idealo_direktkauf">
+                <table>
+                    <tr>
+                        <td><?php echo $this->__('idealo order nr').': '; ?></td>
+                        <td><?php echo $sIdealoOrderNr; ?></td>
+                    </tr>
+                    <?php $sTransactionId = $this->getPaymentTransactionId(); ?>
+                    <?php if (!empty($sTransactionId)) { ?>
+                    <tr>
+                        <td><?php echo $this->__('Transaction id').': '; ?></td>
+                        <td><?php echo $sTransactionId; ?></td>
+                    </tr>
+                    <?php } ?>
+                    <?php $aOptions = $this->getFulfillmentOptions(); ?> 
+                    <?php if (!empty($aOptions)) { ?>
+                        <?php $blFirst = true; ?>
+                        <?php foreach ($aOptions as $aOption) { ?>
+                            <tr>
+                                <td><?php if($blFirst) {echo $this->__('Fulfillment options').': ';} ?></td>
+                                <td><?php echo $this->__($aOption['type']).' - '.$aOption['price'].' '.$aOption['currency']; ?></td>
+                            </tr>
+                            <?php $blFirst = false; ?>
+                        <?php } ?>
+                    <?php } ?> 
+                </table>
             </div>
         </fieldset>
     </div>

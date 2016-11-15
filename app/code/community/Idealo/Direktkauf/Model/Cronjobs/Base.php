@@ -29,13 +29,52 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
     protected $_aTableColumns = array();
     
     /**
+     * Currently set store scope
+     * 
+     * @var Mage_Core_Model_Store
+     */
+    protected $_oStore = null;
+    
+    /**
+     * Get all stores
+     * 
+     * @return Mage_Core_Model_Store[]
+     */
+    protected function _getAllStores()
+    {
+        if (!Mage::helper('idealo_direktkauf')->isMultistoreActive()) {
+            $aStores = array(Mage::app()->getDefaultStoreView());
+        } else {
+            $aStores = Mage::app()->getStores();
+        }
+        
+        return $aStores;
+    }
+    
+    /**
+     * Set current store scope
+     * 
+     * @param Mage_Core_Model_Store $oStore
+     * @return void
+     */
+    protected function _setStore(Mage_Core_Model_Store $oStore)
+    {
+        Mage::helper('idealo_direktkauf')->setStore($oStore);
+        $this->_oStore = $oStore;
+    }
+    
+    /**
      * Return the default store
      * 
      * @return Mage_Core_Model_Store
      */
     protected function _getStore()
     {
-        return Mage::app()->getDefaultStoreView();
+        if ($this->_oStore === null) {
+            return Mage::app()->getDefaultStoreView();
+        }
+        
+        return $this->_oStore;
     }
     
     /**
@@ -70,6 +109,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
         foreach ($aArray as $sKey => $sValue) {
             $aArray[$sKey] = $oConnection->quote($sValue);
         }
+        
         return $aArray;
     }
     
@@ -90,8 +130,10 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
                     $aColumns[] = $aRow['Field'];
                 }
             }
+            
             $this->_aTableColumns[$sTable] = $aColumns;
         }
+        
         return $this->_aTableColumns[$sTable];
     }
     
@@ -112,6 +154,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
                 $aNewData[$sColumnName] = $sValue;
             }
         }
+        
         return $aNewData;
     }
     
@@ -125,7 +168,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
     protected function _insertRecord($aData, $sTableModel)
     {
         $sTable = $this->_getTableName($sTableModel);
-        if ($sTable && is_array($aData) && sizeof($aData) > 0) {
+        if ($sTable && is_array($aData) && !empty($aData) > 0) {
             $aData = $this->_checkData($aData, $sTable);
             
             $aFields = array_keys($aData);
@@ -134,6 +177,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
             $sInsertedId = $this->_executeWriteQuery($sQuery);
             return $sInsertedId;
         }
+        
         return false;
     }
     
@@ -278,7 +322,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
      * 
      * @return void
      */
-    protected function _sendConnectionDataMisssingError()
+    protected function _sendConnectionDataMissingError()
     {
         $sSubject = "Idealo API not configured";
         $sText  = "Please go into your Magento admin and configure your authorization-token!";
@@ -327,7 +371,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
         $sSubject = "Idealo Exception occured";
         $sText  = "While trying to perform a method ".$sMethodAddition." the following exception:\n\n";
         $sText .= $oEx->getMessage();
-        $this->_sendErrorMail( $sSubject, $sText );
+        $this->_sendErrorMail($sSubject, $sText);
     }
     
     /**
@@ -357,6 +401,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
         if (Mage::helper('idealo_direktkauf')->getMode() == 'live') {
             return true;
         }
+        
         return false;
     }
     
@@ -384,6 +429,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
         if (!$sReturn) {
             return false;
         }
+        
         return $sReturn;
     }
     
@@ -400,6 +446,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
         if (!$aReturn) {
             return false;
         }
+        
         return $aReturn;
     }
     

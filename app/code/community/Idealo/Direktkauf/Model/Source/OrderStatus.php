@@ -50,12 +50,12 @@ class Idealo_Direktkauf_Model_Source_OrderStatus
             if (!array_key_exists('values', $stateConfig)) {
                 continue;
             }
+            
             $stateValues = $stateConfig['values'];
 
             if (array_key_exists('label', $stateConfig)) {
                 $stateLabel = $stateConfig['label'];
-            }
-            else {
+            } else {
                 $stateLabel = Mage::helper('adminhtml')->__($stateCode);
             }
 
@@ -95,8 +95,7 @@ class Idealo_Direktkauf_Model_Source_OrderStatus
 
             if (array_key_exists($state, $states)) {
                 $stateLabel = $states[$state];
-            }
-            else {
+            } else {
                 $stateLabel = Mage::helper('adminhtml')->__($state);
             }
 
@@ -105,6 +104,7 @@ class Idealo_Direktkauf_Model_Source_OrderStatus
                 'values' => $stateStatuses
             );
         }
+        
         return $stateStatusArray;
     }
 

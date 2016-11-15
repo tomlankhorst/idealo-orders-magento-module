@@ -19,7 +19,7 @@
 <config>
     <modules>
         <Idealo_Direktkauf>
-            <version>1.0.2</version>
+            <version>1.1.0</version>
         </Idealo_Direktkauf>
     </modules>
     
@@ -79,6 +79,18 @@
             </core_block_abstract_to_html_after>
         </events>
     </adminhtml>
+    
+    <admin>
+        <routers>
+            <adminhtml>
+				<args>
+					<modules>
+						<idealo_direktkauf before="Mage_Adminhtml">Idealo_Direktkauf_Adminhtml</idealo_direktkauf>
+					</modules>
+				</args>
+			</adminhtml>
+        </routers>
+    </admin>
     
     <crontab>
         <jobs>

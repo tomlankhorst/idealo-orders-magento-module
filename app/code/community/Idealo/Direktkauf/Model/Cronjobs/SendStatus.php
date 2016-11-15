@@ -33,6 +33,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
         if (version_compare($sMagentoVersion, $sTriggerVersion, '>=')) {
             return 'track_number';
         }
+        
         return 'number';
     }
     
@@ -69,6 +70,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
         if (!$aOrders) {
             $aOrders = array();
         }
+        
         return $aOrders;
     }
     
@@ -99,6 +101,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
                 $sQuery = "UPDATE {$sTableOrder} SET idealo_fulfillment_sent = NOW() WHERE entity_id = '{$aOrderInfo['order_id']}'";
                 $aOrderInfo['shipment_carrier'] = ''; // removing it only for logging purposes
             }
+            
             $this->_executeWriteQuery($sQuery);
             
             $this->_writeLogEntry('Sent fulfillment status for idealo order-nr: '.$aOrderInfo['idealo_order_nr'].' trackcode: '.$aOrderInfo['track_number'].' carrier: '.$aOrderInfo['shipment_carrier'], Zend_Log::INFO);
@@ -144,6 +147,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
         if (!$aOrders) {
             $aOrders = array();
         }
+        
         return $aOrders;
     }
     
@@ -219,6 +223,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
         if (!$aOrders) {
             $aOrders = array();
         }
+        
         return $aOrders;
     }
     

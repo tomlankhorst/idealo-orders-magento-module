@@ -19,17 +19,10 @@ $installer = $this;
 $installer->startSetup();
 
 $tableOrder = $this->getTable('sales/order');
-$tableOrderGrid = $this->getTable('sales/order_grid');
 
 $installer->run(
-    "ALTER TABLE {$tableOrder} ADD `idealo_order_nr` VARCHAR(32);
-    ALTER TABLE {$tableOrder} ADD `idealo_delivery_carrier` VARCHAR(32);
-    ALTER TABLE {$tableOrder} ADD `idealo_ordernr_sent` DATETIME;
-    ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_sent` DATETIME;
-    ALTER TABLE {$tableOrder} ADD `idealo_trackingcode_sent` DATETIME;
-    ALTER TABLE {$tableOrder} ADD `idealo_revocation_sent` DATETIME;
-    
-    ALTER TABLE {$tableOrderGrid} ADD `idealo_order_nr` VARCHAR(32);"
+    "ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_type` VARCHAR(32);
+    ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_price` VARCHAR(32);"
 );
     
 $installer->endSetup();

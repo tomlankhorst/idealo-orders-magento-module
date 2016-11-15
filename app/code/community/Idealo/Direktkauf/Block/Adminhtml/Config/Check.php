@@ -18,7 +18,8 @@
 /**
  * Config check block for admin config
  */
-class Idealo_Direktkauf_Block_Adminhtml_Config_Check extends Mage_Adminhtml_Block_System_Config_Form_Field_Array_Abstract
+class Idealo_Direktkauf_Block_Adminhtml_Config_Check 
+    extends Mage_Adminhtml_Block_System_Config_Form_Field_Array_Abstract
 {
 
     /**
@@ -39,10 +40,13 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_Check extends Mage_Adminhtml_Bloc
      */
     protected function _prepareToRender()
     {
-        $this->addColumn('not needed', array(
-            'label' =>'A',
-            'style' => '',
-        ));
+        $this->addColumn(
+            'not needed', 
+            array(
+                'label' =>'A',
+                'style' => '',
+            )
+        );
         parent::_prepareToRender();
     }
 
@@ -56,6 +60,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_Check extends Mage_Adminhtml_Bloc
         if (!$this->isIdealoTokenMissing() && !$this->isIdealoEmailMissing() && $this->isIdealoTokenCorrect()) {
             return true;
         }
+        
         return false;
     }
     
@@ -92,9 +97,10 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_Check extends Mage_Adminhtml_Bloc
 
         $oClient = Mage::helper('idealo_direktkauf')->getClient();
         $aOrders = $oClient->getOrders();
-        if (is_array($aOrders) && count($aOrders) > 0 || $oClient->getHttpStatus() == 200) {
+        if (is_array($aOrders) && !empty($aOrders) || $oClient->getHttpStatus() == 200) {
             $blSuccess = true;
         }
+        
         return $blSuccess;
     }
 
