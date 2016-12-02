@@ -94,12 +94,13 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _getVatRuleId($aOrder)
     {
+        $sTable = $this->_getTableName('tax/tax_calculation_rate');
         $sVatIdent = $aOrder['vat_rate'].'_'.$aOrder['billing_address']['country'];
         if (!isset($this->_aVatRuleIds[$sVatIdent])) {
             $sQuery = " SELECT
                             tax_calculation_rate_id
                         FROM
-                            tax_calculation_rate
+                            {$sTable}
                         WHERE
                             tax_country_id = '{$aOrder['billing_address']['country']}' AND
                             rate = '{$aOrder['vat_rate']}'
@@ -908,8 +909,11 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _addOrderGridEntry($sOrderId)
     {
+        $sTableA = $this->_getTableName('sales/order_grid');
+        $sTableB = $this->_getTableName('sales/order');
+        $sTableC = $this->_getTableName('sales/order_address');
         $sQuery = "
-        INSERT INTO `sales_flat_order_grid` (
+        INSERT INTO `{$sTableA}` (
             `entity_id`, `status`, `store_id`, `customer_id`, `base_grand_total`, `base_total_paid`, `grand_total`, `total_paid`, `increment_id`, `base_currency_code`, `order_currency_code`, `store_name`, `created_at`, `updated_at`, `billing_name`, `shipping_name`
         ) SELECT
             `main_table`.`entity_id`,
@@ -929,11 +933,11 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
             CONCAT(IFNULL(table_billing_name.firstname, ''), ' ', IFNULL(table_billing_name.middlename, ''), ' ', IFNULL(table_billing_name.lastname, '')) AS `billing_name`,
             CONCAT(IFNULL(table_shipping_name.firstname, ''), ' ', IFNULL(table_shipping_name.middlename, ''), ' ', IFNULL(table_shipping_name.lastname, '')) AS `shipping_name`
         FROM
-            `sales_flat_order` AS `main_table`
+            `{$sTableB}` AS `main_table`
         LEFT JOIN
-            `sales_flat_order_address` AS `table_billing_name` ON `main_table`.`billing_address_id`=`table_billing_name`.`entity_id`
+            `{$sTableC}` AS `table_billing_name` ON `main_table`.`billing_address_id`=`table_billing_name`.`entity_id`
         LEFT JOIN
-            `sales_flat_order_address` AS `table_shipping_name` ON `main_table`.`shipping_address_id`=`table_shipping_name`.`entity_id`
+            `{$sTableC}` AS `table_shipping_name` ON `main_table`.`shipping_address_id`=`table_shipping_name`.`entity_id`
         WHERE
             (main_table.entity_id IN('{$sOrderId}'))
         ON DUPLICATE KEY
