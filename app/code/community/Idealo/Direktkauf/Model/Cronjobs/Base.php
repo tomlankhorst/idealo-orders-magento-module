@@ -203,7 +203,8 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
                             SET
                                 idealo_ordernr_sent = NOW()
                             WHERE
-                                entity_id = '{$sOrderId}'";
+                                entity_id = '{$sOrderId}' AND
+                                store_id = '{$this->_getShopId()}'";
                 $this->_executeWriteQuery($sQuery);
                 
                 $this->_writeLogEntry('Sent shop order-nr '.$sShopOrderNr.' for idealo order-nr: '.$sIdealoOrderNr, Zend_Log::INFO);

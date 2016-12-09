@@ -61,7 +61,8 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
                     LEFT JOIN
                         {$sTableC} AS c ON a.entity_id = c.order_id
                     WHERE
-                        idealo_order_nr != '' AND
+                        a.idealo_order_nr != '' AND
+                        a.store_id = '{$this->_getShopId()}' AND
                         (
                             (b.entity_id IS NOT NULL AND a.idealo_fulfillment_sent IS NULL) OR
                             (c.entity_id IS NOT NULL AND a.idealo_trackingcode_sent IS NULL)
@@ -96,9 +97,9 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
         } else {
             $sTableOrder = $this->_getTableName('sales/order');
             if (!empty($aOrderInfo['track_number'])) {
-                $sQuery = "UPDATE {$sTableOrder} SET idealo_fulfillment_sent = NOW(), idealo_trackingcode_sent = NOW() WHERE entity_id = '{$aOrderInfo['order_id']}'";
+                $sQuery = "UPDATE {$sTableOrder} SET idealo_fulfillment_sent = NOW(), idealo_trackingcode_sent = NOW() WHERE entity_id = '{$aOrderInfo['order_id']}' and store_id = '{$this->_getShopId()}'";
             } else {
-                $sQuery = "UPDATE {$sTableOrder} SET idealo_fulfillment_sent = NOW() WHERE entity_id = '{$aOrderInfo['order_id']}'";
+                $sQuery = "UPDATE {$sTableOrder} SET idealo_fulfillment_sent = NOW() WHERE entity_id = '{$aOrderInfo['order_id']}' and store_id = '{$this->_getShopId()}'";
                 $aOrderInfo['shipment_carrier'] = ''; // removing it only for logging purposes
             }
             
@@ -140,6 +141,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
                         {$sTableB} AS b ON a.entity_id = b.order_id
                     WHERE
                         a.idealo_order_nr != '' AND
+                        a.store_id = '{$this->_getShopId()}' AND
                         a.state = 'canceled' AND
                         a.status = 'canceled' AND
                         a.idealo_revocation_sent IS NULL";
@@ -182,7 +184,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
             $this->_sendRevocationErrorMail($aOrderInfo['idealo_order_nr'], $oClient);
         } else {
             $sTableOrder = $this->_getTableName('sales/order');
-            $sQuery = "UPDATE {$sTableOrder} SET idealo_revocation_sent = NOW() WHERE entity_id = '{$aOrderInfo['order_id']}'";
+            $sQuery = "UPDATE {$sTableOrder} SET idealo_revocation_sent = NOW() WHERE entity_id = '{$aOrderInfo['order_id']}' and store_id = '{$this->_getShopId()}'";
             $this->_executeWriteQuery($sQuery);
             
             $this->_writeLogEntry('Sent revocation status for idealo order-nr: '.$aOrderInfo['idealo_order_nr'], Zend_Log::INFO);
@@ -218,6 +220,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
                         {$sTable}
                     WHERE
                         idealo_order_nr != '' AND
+                        store_id = '{$this->_getShopId()}' AND
                         idealo_ordernr_sent IS NULL";
         $aOrders = $this->_fetchAll($sQuery);
         if (!$aOrders) {
@@ -247,12 +250,17 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
      */
     public function start()
     {
-        try {
-            $this->_handleFulfillments();
-            $this->_handleRevocations();
-            $this->_handleOrderNumbers();
-        } catch(Exception $oEx) {
-            $this->_sendExceptionMail($oEx, 'script: Idealo_Direktkauf_Model_Cronjobs_SendStatus::start()');
+        $aStores = $this->_getAllStores();
+        foreach ($aStores as $oStore) {
+            $this->_setStore($oStore);
+            
+            try {
+                $this->_handleFulfillments();
+                $this->_handleRevocations();
+                $this->_handleOrderNumbers();
+            } catch(Exception $oEx) {
+                $this->_sendExceptionMail($oEx, 'script: Idealo_Direktkauf_Model_Cronjobs_SendStatus::start()');
+            }
         }
     }
 
