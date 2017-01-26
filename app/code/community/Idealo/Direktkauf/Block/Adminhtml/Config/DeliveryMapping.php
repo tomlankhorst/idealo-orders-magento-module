@@ -61,15 +61,13 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_DeliveryMapping
     
     /**
      * Constructor
-     * 
-     * @return void
      */
     public function __construct()
     {
         parent::__construct();
         $this->setTemplate('idealo/direktkauf/config/delivery_mapping.phtml');
     }
-    
+
     /**
      * Needed to render the page correctly
      * 
@@ -116,6 +114,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_DeliveryMapping
      */
     public function getShopDeliveryTypes() 
     {
+        Mage::helper('idealo_direktkauf')->setAdminStoreId();
         return Mage::helper('idealo_direktkauf')->getShopDeliveryTypes();
     }
 

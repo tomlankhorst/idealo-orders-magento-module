@@ -24,8 +24,6 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_Import
 
     /**
      * constructor
-     * 
-     * @return void
      */
     public function __construct()
     {

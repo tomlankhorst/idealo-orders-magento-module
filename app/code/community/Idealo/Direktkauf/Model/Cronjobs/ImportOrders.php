@@ -189,7 +189,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         $aQuote['is_changed'] = '1';
         $aQuote['trigger_recollect'] = '0';
 
-        $aQuote['is_active'] = '0';# vll doch erst auf 1 setzen und später auf 0?
+        $aQuote['is_active'] = '0';# vll doch erst auf 1 setzen und spï¿½ter auf 0?
         $aQuote['is_virtual'] = '0';
         $aQuote['is_multi_shipping'] = '0';
         $aQuote['orig_order_id'] = '0';
@@ -706,7 +706,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      * Fill the data to a order payment entity and write it into the DB
      * Returns the entity id
      *
-     * @param string $aOrder
+     * @param array $aOrder
      * @param int $iOrderId
      * @return string
      */
@@ -746,7 +746,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _addOrderStatusHistory($aOrder, $iOrderId)
     {
-        $aStatusInfo = $this->_getOrderStatusInfo($aOrder);
+        $aStatusInfo = $this->_getOrderStatusInfo();
 
         $aOrderStatus = array();
         $aOrderStatus['parent_id'] = $iOrderId;
@@ -821,7 +821,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         $sIncrementId = $this->_aReservedIncrementIds[$aOrder['order_number']];
 
         $aShippingInfo = $this->_getShippingInfo($aOrder);
-        $aStatusInfo = $this->_getOrderStatusInfo($aOrder);
+        $aStatusInfo = $this->_getOrderStatusInfo();
 
         $aShopOrder = array();
         $aShopOrder['store_id'] = $this->_getShopId();
@@ -979,7 +979,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      * Returns the entity_id of the orderarticle
      *
      * @param array $aOrder
-     * @param array $aOrderItem
+     * @param array $aOrderarticle
      * @param string $sOrderId
      * @return string
      */
@@ -1097,7 +1097,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
     /**
      * Get the mapped Magento payment method
      *
-     * @param type $aOrder
+     * @param array $aOrder
      * @return string
      */
     protected function _getPaymentMethod($aOrder)

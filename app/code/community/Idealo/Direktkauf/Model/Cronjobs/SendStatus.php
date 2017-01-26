@@ -246,7 +246,7 @@ class Idealo_Direktkauf_Model_Cronjobs_SendStatus extends Idealo_Direktkauf_Mode
     /**
      * Main method to start this cronjob
      * 
-     * @return array
+     * @return void
      */
     public function start()
     {

@@ -62,6 +62,31 @@ class Idealo_Direktkauf_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
+     * Return currenctly selected scope store id in the admin area
+     *
+     * @return int
+     */
+    protected function _getConfigScopeStoreId()
+    {
+        $iStoreId = Mage_Core_Model_App::ADMIN_STORE_ID;
+        $sStoreCode = (string)Mage::app()->getRequest()->getParam('store');
+        $sWebsiteCode = (string)Mage::app()->getRequest()->getParam('website');
+        if ('' !== $sStoreCode) { // store level
+            $iStoreId = Mage::getModel('core/store')->load( $sStoreCode )->getId();
+        } elseif ('' !== $sWebsiteCode) { // website level
+            $iStoreId = Mage::getModel('core/website')->load( $sWebsiteCode )->getDefaultStore()->getId();
+        }
+        return $iStoreId;
+    }
+
+    public function setAdminStoreId()
+    {
+        $iStoreId = $this->_getConfigScopeStoreId();
+        $oStore = Mage::getModel('core/store')->load($iStoreId);
+        $this->setStore($oStore);
+    }
+
+    /**
      * Return idealo SDK client
      *
      * @return object
@@ -74,7 +99,12 @@ class Idealo_Direktkauf_Helper_Data extends Mage_Core_Helper_Abstract
             $sToken = $this->getAuthToken();
             $blIsLive = $this->getMode() == 'live' ? true : false;
 
-            $this->_oClient = new idealo\Direktkauf\REST\Client($sToken, $blIsLive);
+            $oClient = new idealo\Direktkauf\REST\Client($sToken, $blIsLive);
+            $oClient->setERPShopSystem('Magento');
+            $oClient->setERPShopSystemVersion(Mage::getVersion());
+            $oClient->setIntegrationPartner('FATCHIP');
+            $oClient->setInterfaceVersion(Mage::getConfig()->getNode()->modules->Idealo_Direktkauf->version);
+            $this->_oClient = $oClient;
         }
         
         return $this->_oClient;
@@ -212,18 +242,42 @@ class Idealo_Direktkauf_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
+     * Get active payment type codes
+     *
+     * @param int $iStoreId
+     * @return array
+     */
+    protected function _getActivePaymentMethods($iStoreId)
+    {
+        // inspired by Mage::getSingleton('payment/config')->getActiveMethods($iStoreId) but this has a bug with paypal
+        $aMethods = array();
+        $aConfig = Mage::getStoreConfig('payment', $iStoreId);
+        foreach ($aConfig as $sCode => $aMethodConfig) {
+            if (Mage::getStoreConfigFlag('payment/' . $sCode . '/active', $iStoreId)) {
+                if (array_key_exists('model', $aMethodConfig)) {
+                    $oMethodModel = Mage::getModel($aMethodConfig['model']);
+                    if (stripos($sCode, 'paypal') !== false || ($oMethodModel && $oMethodModel->getConfigData('active', $iStoreId))) {
+                        $aMethods[] = $sCode;
+                    }
+                }
+            }
+        }
+        return $aMethods;
+    }
+
+    /**
      * Get shop payment types
      *
      * @return array
      */
     public function getShopPaymentTypes()
     {
-        $aPayments = Mage::getSingleton('payment/config')->getActiveMethods();
         $aMethods = array();
-        foreach ($aPayments as $sPaymentCode => $oPaymentModel) {
-            $aMethods[$sPaymentCode] = Mage::getStoreConfig('payment/'.$sPaymentCode.'/title');
+        $iStoreId = $this->getStore()->getId();
+        $aPayments = $this->_getActivePaymentMethods($iStoreId);
+        foreach ($aPayments as $sPaymentCode) {
+            $aMethods[$sPaymentCode] = Mage::getStoreConfig('payment/'.$sPaymentCode.'/title', $iStoreId);
         }
-        
         return $aMethods;
     }
 
@@ -234,11 +288,12 @@ class Idealo_Direktkauf_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function getShopDeliveryTypes()
     {
-        $aMethods = Mage::getSingleton('shipping/config')->getActiveCarriers();
+        $iStoreId = $this->getStore()->getId();
+        $aMethods = Mage::getSingleton('shipping/config')->getActiveCarriers($iStoreId);
 
         $aDeliveryTypes = array();
         foreach ($aMethods as $sCarrierCode => $oCarrier) {
-            if (!$sTitle = Mage::getStoreConfig("carriers/$sCarrierCode/title")) {
+            if (!$sTitle = Mage::getStoreConfig("carriers/$sCarrierCode/title", $iStoreId)) {
                 $sTitle = $sCarrierCode;
             }
             

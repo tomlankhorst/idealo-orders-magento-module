@@ -65,15 +65,17 @@ class Idealo_Direktkauf_Block_Adminhtml_Order_Info extends Mage_Core_Block_Templ
             $sFulfillmentTypes = $oOrder->getIdealoFulfillmentType();
             $sFulfillmentPrices = $oOrder->getIdealoFulfillmentPrice();
             
-            $aFulfillmentTypes = explode($sDelimiter, $sFulfillmentTypes);
-            $aFulfillmentPrices = explode($sDelimiter, $sFulfillmentPrices);
-            
-            for ($i = 0; $i < count($aFulfillmentTypes); $i++) {
-                $aOptions[] = array(
-                    'type' => $aFulfillmentTypes[$i],
-                    'price' => $aFulfillmentPrices[$i],
-                    'currency' => $sCurrency,
-                );
+            if(!empty($sFulfillmentTypes) && !empty($sFulfillmentPrices)) {
+                $aFulfillmentTypes = explode($sDelimiter, $sFulfillmentTypes);
+                $aFulfillmentPrices = explode($sDelimiter, $sFulfillmentPrices);
+
+                for ($i = 0; $i < count($aFulfillmentTypes); $i++) {
+                    $aOptions[] = array(
+                        'type' => $aFulfillmentTypes[$i],
+                        'price' => $aFulfillmentPrices[$i],
+                        'currency' => $sCurrency,
+                    );
+                }
             }
         }
         

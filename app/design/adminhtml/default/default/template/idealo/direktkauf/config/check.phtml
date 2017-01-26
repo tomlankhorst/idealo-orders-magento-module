@@ -21,7 +21,7 @@
 <?php } else { ?>
     <?php if($this->isIdealoTokenMissing()) { ?>
         <div style="color:red;"><?php echo Mage::helper('idealo_direktkauf')->__('Please enter an authorization-token!'); ?></div>
-    <?php } elseif($this->isIdealoTokenCorrect()) { ?>
+    <?php } elseif($this->isIdealoTokenIncorrect()) { ?>
         <div style="color:red;"><?php echo Mage::helper('idealo_direktkauf')->__('No connection could be established with this token!'); ?></div>
     <?php } elseif($this->isIdealoEmailMissing()) { ?>
         <div style="color:red;"><?php echo Mage::helper('idealo_direktkauf')->__('Please enter an email-address for error-mails!'); ?></div>

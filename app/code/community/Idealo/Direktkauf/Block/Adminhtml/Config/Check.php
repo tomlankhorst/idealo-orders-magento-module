@@ -24,8 +24,6 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_Check
 
     /**
      * constructor
-     * 
-     * @return void
      */
     public function __construct()
     {
@@ -57,7 +55,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_Check
      */
     public function isIdealoConfigComplete()
     {
-        if (!$this->isIdealoTokenMissing() && !$this->isIdealoEmailMissing() && $this->isIdealoTokenCorrect()) {
+        if (!$this->isIdealoTokenMissing() && !$this->isIdealoEmailMissing() && !$this->isIdealoTokenIncorrect()) {
             return true;
         }
         
@@ -87,21 +85,21 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_Check
     }
     
     /**
-     * Return if idealo token is correct
+     * Return if idealo token is incorrect
      * 
      * @return bool
      */
-    public function isIdealoTokenCorrect()
+    public function isIdealoTokenIncorrect()
     {
-        $blSuccess = false;
+        $blIncorrect = true;
 
+        Mage::helper('idealo_direktkauf')->setAdminStoreId();
         $oClient = Mage::helper('idealo_direktkauf')->getClient();
         $aOrders = $oClient->getOrders();
         if (is_array($aOrders) && !empty($aOrders) || $oClient->getHttpStatus() == 200) {
-            $blSuccess = true;
+            $blIncorrect = false;
         }
-        
-        return $blSuccess;
+        return $blIncorrect;
     }
 
 }

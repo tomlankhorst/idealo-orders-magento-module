@@ -35,15 +35,13 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_PaymentMapping
     
     /**
      * Constructor
-     * 
-     * @return void
      */
     public function __construct()
     {
         parent::__construct();
         $this->setTemplate('idealo/direktkauf/config/payment_mapping.phtml');
     }
-    
+
     /**
      * Needed to render the page correctly
      * 
@@ -84,6 +82,7 @@ class Idealo_Direktkauf_Block_Adminhtml_Config_PaymentMapping
      */
     public function getShopPaymentTypes()
     {
+        Mage::helper('idealo_direktkauf')->setAdminStoreId();
         return Mage::helper('idealo_direktkauf')->getShopPaymentTypes();
     }
     
