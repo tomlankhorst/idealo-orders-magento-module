@@ -15,21 +15,36 @@
    limitations under the License.
 */
 
+/** @var $this Mage_Core_Model_Resource_Setup */
+/** @var $installer Mage_Core_Model_Resource_Setup */
 $installer = $this;
 $installer->startSetup();
+
+$connection = $installer->getConnection();
 
 $tableOrder = $this->getTable('sales/order');
 $tableOrderGrid = $this->getTable('sales/order_grid');
 
-$installer->run(
-    "ALTER TABLE {$tableOrder} ADD `idealo_order_nr` VARCHAR(32);
-    ALTER TABLE {$tableOrder} ADD `idealo_delivery_carrier` VARCHAR(32);
-    ALTER TABLE {$tableOrder} ADD `idealo_ordernr_sent` DATETIME;
-    ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_sent` DATETIME;
-    ALTER TABLE {$tableOrder} ADD `idealo_trackingcode_sent` DATETIME;
-    ALTER TABLE {$tableOrder} ADD `idealo_revocation_sent` DATETIME;
-    
-    ALTER TABLE {$tableOrderGrid} ADD `idealo_order_nr` VARCHAR(32);"
-);
+if (!$connection->tableColumnExists($tableOrder, 'idealo_order_nr')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_order_nr` VARCHAR(32);");
+}
+if (!$connection->tableColumnExists($tableOrder, 'idealo_delivery_carrier')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_delivery_carrier` VARCHAR(32);");
+}
+if (!$connection->tableColumnExists($tableOrder, 'idealo_ordernr_sent')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_ordernr_sent` DATETIME;");
+}
+if (!$connection->tableColumnExists($tableOrder, 'idealo_fulfillment_sent')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_sent` DATETIME;");
+}
+if (!$connection->tableColumnExists($tableOrder, 'idealo_trackingcode_sent')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_trackingcode_sent` DATETIME;");
+}
+if (!$connection->tableColumnExists($tableOrder, 'idealo_revocation_sent')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_revocation_sent` DATETIME;");
+}
+if (!$connection->tableColumnExists($tableOrderGrid, 'idealo_order_nr')) {
+    $installer->run("ALTER TABLE {$tableOrderGrid} ADD `idealo_order_nr` VARCHAR(32);");
+}
     
 $installer->endSetup();

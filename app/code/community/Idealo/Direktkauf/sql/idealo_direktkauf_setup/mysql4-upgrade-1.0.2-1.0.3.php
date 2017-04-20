@@ -15,14 +15,20 @@
    limitations under the License.
 */
 
+/** @var $this Mage_Core_Model_Resource_Setup */
+/** @var $installer Mage_Core_Model_Resource_Setup */
 $installer = $this;
 $installer->startSetup();
 
+$connection = $installer->getConnection();
+
 $tableOrder = $this->getTable('sales/order');
 
-$installer->run(
-    "ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_type` VARCHAR(32);
-    ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_price` VARCHAR(32);"
-);
+if (!$connection->tableColumnExists($tableOrder, 'idealo_fulfillment_type')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_type` VARCHAR(32);");
+}
+if (!$connection->tableColumnExists($tableOrder, 'idealo_fulfillment_price')) {
+    $installer->run("ALTER TABLE {$tableOrder} ADD `idealo_fulfillment_price` VARCHAR(32);");
+}
     
 $installer->endSetup();
