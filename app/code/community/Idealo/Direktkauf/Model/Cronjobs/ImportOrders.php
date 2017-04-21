@@ -191,19 +191,13 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
     /**
      * Create dummy address with country and postcode
      *
-     * @param $aOrder
-     * @return Mage_Core_Model_Abstract
+     * @param string $sCountry
+     * @param string $sZip
+     * @return Mage_Sales_Model_Quote_Address
      */
-    protected function _getDummyOrder($aOrder)
+    protected function _getAddress($sCountry, $sZip)
     {
-        if (isset($aOrder['shipping_address'])) {
-            $sCountry = $aOrder['shipping_address']['country'];
-            $sZip = $aOrder['shipping_address']['zip'];
-        } elseif (isset($aOrder['billing_address'])) {
-            $sCountry = $aOrder['billing_address']['country'];
-            $sZip = $aOrder['billing_address']['zip'];
-        }
-
+        /** @var Mage_Sales_Model_Quote_Address $oShippingAddress */
         $oShippingAddress = Mage::getModel('sales/quote_address');
         $oShippingAddress->setCountryId($sCountry);
         $oShippingAddress->setPostcode($sZip);
@@ -217,13 +211,21 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _getVatRateForProduct($sProductId, $aOrder)
     {
-        $oDummyAddress = $this->_getDummyOrder($aOrder);
+        $oShippingAddress = null;
+        if (isset($aOrder['shipping_address'])) {
+            $oShippingAddress = $this->_getAddress($aOrder['shipping_address']['country'], $aOrder['shipping_address']['zip']);
+        }
+        $oBillingAddress = null;
+        if (isset($aOrder['billing_address'])) {
+            $oBillingAddress = $this->_getAddress($aOrder['billing_address']['country'], $aOrder['billing_address']['zip']);
+        }
 
         $oProduct = Mage::getModel('catalog/product')->load($sProductId);
         $oStore = Mage::getModel('core/store')->load($this->_getShopId());
 
+        /** @var Mage_Tax_Model_Calculation $oTaxCalc */
         $oTaxCalc = Mage::getModel('tax/calculation');
-        $oRequest = $oTaxCalc->getRateRequest($oDummyAddress, null, null, $oStore);
+        $oRequest = $oTaxCalc->getRateRequest($oShippingAddress, $oBillingAddress, null, $oStore);
         $dVatRate = $oTaxCalc->getRate($oRequest->setProductClassId($oProduct->getTaxClassId()));
 
         return $dVatRate;
@@ -1366,7 +1368,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
                         $this->_sendHandleOrderError($aOrder, $this->sLastOrderHandleErrorType);
                         $this->_sendOrderRevocation($aOrder['order_number'], 'MERCHANT_DECLINE', $this->sLastOrderHandleErrorType);
                     }
-                } catch(Exception $oEx) {
+                } catch (Exception $oEx) {
                     $this->_sendHandleOrderError($aOrder, $oEx->getMessage());
                 }
             }
