@@ -1146,6 +1146,10 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _getShippingPrice($aOrder, $blIncludeTax = null)
     {
+        if ($blIncludeTax === true) {
+            return $aOrder['total_shipping']; // brut price
+        }
+
         $oShippingAddress = null;
         if (isset($aOrder['shipping_address'])) {
             $oShippingAddress = $this->_getAddress($aOrder['shipping_address']['country'], $aOrder['shipping_address']['zip']);
@@ -1155,13 +1159,14 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
             $oBillingAddress = $this->_getAddress($aOrder['billing_address']['country'], $aOrder['billing_address']['zip']);
         }
 
-        $oPseudoProduct = new Varien_Object();
-        $oPseudoProduct->setTaxClassId(Mage::helper('tax')->getShippingTaxClass($this->_getStore()));
-        #$blShippingIncludesTax = Mage::helper('tax')->shippingPriceIncludesTax($this->_getStore()); this would be the Magento core way
-        $blShippingIncludesTax = true; // expecting shipping price from idealo to always include tax
+        $oTax = Mage::getSingleton('tax/calculation');
+        $request = $oTax->getRateRequest($oShippingAddress, $oBillingAddress, null, $this->_getStore());
+        $request->setProductClassId(Mage::helper('tax')->getShippingTaxClass($this->_getStore()));
+        $percent = $oTax->getRate($request);
 
-        $dShippingPrice = Mage::helper('tax')->getPrice($oPseudoProduct, $aOrder['total_shipping'], $blIncludeTax, $oShippingAddress, $oBillingAddress, null, $this->_getStore(), $blShippingIncludesTax);
-        return $dShippingPrice;
+        $dTaxAmount = Mage::helper('tax')->getCalculator()->calcTaxAmount($aOrder['total_shipping'], $percent, true);
+        $dNetPrice = $aOrder['total_shipping'] - $dTaxAmount;
+        return $dNetPrice;
     }
 
     /**
