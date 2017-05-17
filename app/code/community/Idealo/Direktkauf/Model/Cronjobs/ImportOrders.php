@@ -71,6 +71,20 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
     protected $_aImportedTokens = array();
 
     /**
+     * Array with all vats existing in the order products
+     *
+     * @var array|null
+     */
+    protected $_aOrderVats = null;
+
+    /**
+     * Product array
+     *
+     * @var array
+     */
+    protected $_aProducts = array();
+
+    /**
      * Calculate the item quantity from the given order
      *
      * @param array $aOrder
@@ -86,16 +100,24 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         return $iCount;
     }
 
+    protected function _getMainVat($aOrder)
+    {
+        $aOrderVats = $this->_getOrderVats($aOrder);
+        $aVatRate1 = array_shift($aOrderVats);
+        return $aVatRate1['vatrate'];
+    }
+
     /**
      * Return vat rule id for the given idealo order
      *
      * @param array $aOrder
+     * @param double $dMainVat
      * @return string
      */
-    protected function _getVatRuleId($aOrder)
+    protected function _getVatRuleId($aOrder, $dMainVat)
     {
         $sTable = $this->_getTableName('tax/tax_calculation_rate');
-        $sVatIdent = $aOrder['vat_rate'].'_'.$aOrder['billing_address']['country'];
+        $sVatIdent = $dMainVat.'_'.$aOrder['billing_address']['country'];
         if (!isset($this->_aVatRuleIds[$sVatIdent])) {
             $sQuery = " SELECT
                             tax_calculation_rate_id
@@ -103,7 +125,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
                             {$sTable}
                         WHERE
                             tax_country_id = '{$aOrder['billing_address']['country']}' AND
-                            rate = '{$aOrder['vat_rate']}'
+                            rate = '{$dMainVat}'
                         LIMIT 1";
             $sVatRuleId = $this->_fetchOne($sQuery);
             if (!$sVatRuleId) {
@@ -117,6 +139,120 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
     }
 
     /**
+     * Collect all vats existing in the order products
+     *
+     * @param $aOrder
+     * @return array
+     */
+    protected function _getOrderVats($aOrder)
+    {
+        if ($this->_aOrderVats === null) {
+            $aOrderVats = array();
+            foreach ($aOrder['line_items'] as $aItem) {
+                $sProductId = $this->_getProductId($aItem['sku']);
+
+                $dVat = $this->_getVatRateForProduct($sProductId, $aOrder);
+                if (array_key_exists((string)$dVat, $aOrderVats) === false) {
+                    $aOrderVats[(string)$dVat] = array('vatprice' => 0, 'netprice' => 0, 'vatrate' => $dVat);
+                }
+                $dVatPrice = $this->_getVatPrice($aItem['price'], $dVat);
+                $dNetPrice = $this->_getNetPrice($aItem['price'], $dVat);
+                $aOrderVats[(string)$dVat]['vatprice'] += $dVatPrice;
+                $aOrderVats[(string)$dVat]['netprice'] += $dNetPrice;
+            }
+            krsort($aOrderVats);
+
+            $this->_aOrderVats = $aOrderVats;
+        }
+        return $this->_aOrderVats;
+    }
+
+    protected function _getOrderVatSum($aOrder)
+    {
+        $aOrderVats = $this->_getOrderVats($aOrder);
+
+        $dVatSum = 0;
+        foreach ($aOrderVats as $aVatValue) {
+            $dVatSum += $aVatValue['vatprice'];
+        }
+        return $dVatSum;
+    }
+
+    /**
+     * Get order net sum
+     *
+     * @param array $aOrder
+     * @return double
+     */
+    protected function _getOrderNetSum($aOrder)
+    {
+        $aOrderVats = $this->_getOrderVats($aOrder);
+
+        $dNetSum = 0;
+        foreach ($aOrderVats as $aVatValue) {
+            $dNetSum += $aVatValue['netprice'];
+        }
+        return $dNetSum;
+    }
+
+    /**
+     * Create dummy address with country and postcode
+     *
+     * @param string $sCountry
+     * @param string $sZip
+     * @return Mage_Sales_Model_Quote_Address
+     */
+    protected function _getAddress($sCountry, $sZip)
+    {
+        /** @var Mage_Sales_Model_Quote_Address $oAddress */
+        $oAddress = Mage::getModel('sales/quote_address');
+        $oAddress->setCountryId($sCountry);
+        $oAddress->setPostcode($sZip);
+        return $oAddress;
+    }
+
+    /**
+     * Return product object
+     *
+     * @param $sProductId
+     * @return Mage_Catalog_Model_Product
+     */
+    protected function _getProduct($sProductId)
+    {
+        if (array_key_exists($sProductId, $this->_aProducts) === false) {
+            $this->_aProducts[$sProductId] = Mage::getModel('catalog/product')->load($sProductId);
+        }
+        return $this->_aProducts[$sProductId];
+    }
+
+    /**
+     * @param string $sProductId
+     * @param array $aOrder
+     * @return double
+     */
+    protected function _getVatRateForProduct($sProductId, $aOrder)
+    {
+        $oShippingAddress = null;
+        if (isset($aOrder['shipping_address'])) {
+            $oShippingAddress = $this->_getAddress($aOrder['shipping_address']['country'], $aOrder['shipping_address']['zip']);
+        }
+        $oBillingAddress = null;
+        if (isset($aOrder['billing_address'])) {
+            $oBillingAddress = $this->_getAddress($aOrder['billing_address']['country'], $aOrder['billing_address']['zip']);
+        }
+
+        $oProduct = $this->_getProduct($sProductId);
+        $oStore = Mage::getModel('core/store')->load($this->_getShopId());
+
+        /** @var Mage_Tax_Model_Calculation $oTaxCalc */
+        $oTaxCalc = Mage::getModel('tax/calculation');
+        $oRequest = $oTaxCalc->getRateRequest($oShippingAddress, $oBillingAddress, null, $oStore);
+        $dVatRate = $oTaxCalc->getRate($oRequest->setProductClassId($oProduct->getTaxClassId()));
+
+        return $dVatRate;
+    }
+
+    /**
      * Calculate net price from brut price
      *
      * @param double $dBrutPrice
@@ -126,7 +262,21 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
     protected function _getNetPrice($dBrutPrice, $dVat)
     {
         $dNetPrice = $dBrutPrice / (1 + ($dVat / 100));
+
         return $dNetPrice;
+    }
+
+    /**
+     * Calculate vat amount of a price
+     *
+     * @param double $dBrutPrice
+     * @param double $dVat
+     * @return double
+     */
+    protected function _getVatPrice($dBrutPrice, $dVat)
+    {
+        $dVatPrice = ($dBrutPrice / (100 + $dVat)) * $dVat;
+        return $dVatPrice;
     }
 
     /**
@@ -158,7 +308,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _addQuote($aOrder)
     {
-        $sNetPrice = $this->_getNetPrice($aOrder['total_line_items_price'], $aOrder['vat_rate']);
+        $sNetPrice = $this->_getOrderNetSum($aOrder);
 
         $sIncrementId = $this->getReservedOrderId();
         $this->_aReservedIncrementIds[$aOrder['order_number']] = $sIncrementId;
@@ -177,7 +327,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         $aQuote['grand_total'] = $aOrder['total_price'];//brut complete
         $aQuote['base_grand_total'] = $aOrder['total_price'];//brut complete
         $aQuote['customer_id'] = NULL;
-        $aQuote['customer_tax_class_id'] = $this->_getVatRuleId($aOrder);
+        $aQuote['customer_tax_class_id'] = $this->_getVatRuleId($aOrder, $this->_getMainVat($aOrder));
         $aQuote['applied_rule_ids'] = NULL;
         $aQuote['global_currency_code'] = $aOrder['currency'];
         $aQuote['base_to_global_rate'] = '1';
@@ -307,10 +457,17 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
             $sShippingTitle = $aAvailableDeliveryTypes[$sShippingId];
         }
 
+        $dShippingNetPrice = $this->_getShippingPrice($aOrder, false);
+        $dShippingBrutPrice = $this->_getShippingPrice($aOrder, true);
+        $dShippingTaxAmount = $dShippingBrutPrice - $dShippingNetPrice;
+
         return array(
             'id' => $sShippingId,
             'title' => $sShippingTitle,
             'carrier' => $sCarrier,
+            'shipping_amount_net' => $dShippingNetPrice,
+            'shipping_amount_brut' => $dShippingBrutPrice,
+            'shipping_amount_tax' => $dShippingTaxAmount
         );
     }
 
@@ -334,10 +491,11 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
             $iSameAsBilling = $this->_hasDifferentShippingAddress($aOrder) === false ? '1' : '0';
         }
 
-        $dNetOrderSum = $this->_getNetPrice($aOrder['total_line_items_price'], $aOrder['vat_rate']);
-        $dVatOrderSum = $aOrder['total_line_items_price'] - $this->_getNetPrice($aOrder['total_line_items_price'], $aOrder['vat_rate']);
+        $dNetOrderSum = $this->_getOrderNetSum();
 
         $aShippingInfo = $this->_getShippingInfo($aOrder);
+
+        $dVatOrderSum = $aOrder['total_line_items_price'] - $dNetOrderSum + $aShippingInfo['shipping_amount_tax'];
 
         $sStreet = $aOrder[$sKey]['address1'];
         if (!empty($aOrder[$sKey]['address2'])) {
@@ -372,18 +530,18 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         $aAddress['base_subtotal'] = $blIsShipping ? $dNetOrderSum : 0;
         $aAddress['tax_amount'] = $blIsShipping ? $dVatOrderSum : 0;
         $aAddress['base_tax_amount'] = $blIsShipping ? $dVatOrderSum : 0;
-        $aAddress['shipping_amount'] = $blIsShipping ? $aOrder['total_shipping'] : 0;
-        $aAddress['base_shipping_amount'] = $blIsShipping ? $aOrder['total_shipping'] : 0;
-        $aAddress['shipping_tax_amount'] = '0';
-        $aAddress['base_shipping_tax_amount'] = '0';
+        $aAddress['shipping_amount'] = $blIsShipping ? $aShippingInfo['shipping_amount_net'] : 0;
+        $aAddress['base_shipping_amount'] = $blIsShipping ? $aShippingInfo['shipping_amount_net'] : 0;
+        $aAddress['shipping_tax_amount'] = $blIsShipping ? $aShippingInfo['shipping_amount_tax'] : 0;
+        $aAddress['base_shipping_tax_amount'] = $blIsShipping ? $aShippingInfo['shipping_amount_tax'] : 0;
         $aAddress['discount_amount'] = '0';
         $aAddress['base_discount_amount'] = '0';
         $aAddress['grand_total'] = $blIsShipping ? $aOrder['total_price'] : 0;
         $aAddress['base_grand_total'] = $blIsShipping ? $aOrder['total_price'] : 0;
         $aAddress['applied_taxes'] = 'a:0:{}';// is this needed? big serialized array included normally
         $aAddress['subtotal_incl_tax'] = $blIsShipping ? $aOrder['total_line_items_price']: 0;
-        $aAddress['shipping_incl_tax'] = '0';
-        $aAddress['base_shipping_incl_tax'] = '0';
+        $aAddress['shipping_incl_tax'] = $blIsShipping ? $aShippingInfo['shipping_amount_brut'] : 0;
+        $aAddress['base_shipping_incl_tax'] = $blIsShipping ? $aShippingInfo['shipping_amount_brut'] : 0;
 
         return $this->_insertRecord($aAddress, 'sales/quote_address');
     }
@@ -522,9 +680,11 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
             $sMainId = $sParentId;
         }
 
+        $dVatRate = $this->_getVatRateForProduct($sProductId, $aOrder);
+
         $dBrutPrice = $aOrderItem['item_price'];
         $dTotalBrutPrice = $aOrderItem['price'];
-        $dNetPrice = $this->_getNetPrice($dBrutPrice, $aOrder['vat_rate']);
+        $dNetPrice = $this->_getNetPrice($dBrutPrice, $dVatRate);
         $dTotalNetPrice = $dNetPrice * $aOrderItem['quantity'];
         $dTotalVatAmount = $dTotalBrutPrice - $dTotalNetPrice;
 
@@ -548,7 +708,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         $aQuoteItem['discount_percent'] = '0';
         $aQuoteItem['discount_amount'] = '0';
         $aQuoteItem['base_discount_amount'] = '0';
-        $aQuoteItem['tax_percent'] = $aOrder['vat_rate'];
+        $aQuoteItem['tax_percent'] = $dVatRate;
         $aQuoteItem['tax_amount'] = $dTotalVatAmount;
         $aQuoteItem['base_tax_amount'] = $dTotalVatAmount;
         $aQuoteItem['row_total'] = $dTotalNetPrice;
@@ -712,11 +872,13 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _addOrderPayment($aOrder, $iOrderId)
     {
+        $dShippingNetPrice = $this->_getShippingPrice($aOrder, false);
+
         $aOrderPayment = array();
         $aOrderPayment['parent_id'] = $iOrderId;
         $aOrderPayment['last_trans_id'] = $aOrder['payment']['transaction_id'];
-        $aOrderPayment['base_shipping_amount'] = $aOrder['total_shipping'];
-        $aOrderPayment['shipping_amount'] = $aOrder['total_shipping'];
+        $aOrderPayment['base_shipping_amount'] = $dShippingNetPrice;
+        $aOrderPayment['shipping_amount'] = $dShippingNetPrice;
         $aOrderPayment['base_amount_ordered'] = $aOrder['total_price'];
         $aOrderPayment['amount_ordered'] = $aOrder['total_price'];
         $aOrderPayment['additional_data'] = NULL;
@@ -815,13 +977,14 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
      */
     protected function _handleOrder($aOrder, $iQuoteId)
     {
-        $dNetBasketSum = $this->_getNetPrice($aOrder['total_line_items_price'], $aOrder['vat_rate']);
-        $dVatOrderSum = $aOrder['total_line_items_price'] - $this->_getNetPrice($aOrder['total_line_items_price'], $aOrder['vat_rate']);
+        $dNetBasketSum = $this->_getOrderNetSum($aOrder);
 
         $sIncrementId = $this->_aReservedIncrementIds[$aOrder['order_number']];
 
         $aShippingInfo = $this->_getShippingInfo($aOrder);
         $aStatusInfo = $this->_getOrderStatusInfo();
+
+        $dVatOrderSum = $aOrder['total_line_items_price'] - $dNetBasketSum + $aShippingInfo['shipping_amount_tax'];
 
         $aShopOrder = array();
         $aShopOrder['store_id'] = $this->_getShopId();
@@ -839,12 +1002,12 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         $aShopOrder['grand_total'] = $aOrder['total_price'];
         $aShopOrder['base_subtotal_incl_tax'] = $aOrder['total_line_items_price'];
         $aShopOrder['subtotal_incl_tax'] = $aOrder['total_line_items_price'];
-        $aShopOrder['base_shipping_amount'] = $aOrder['total_shipping'];
-        $aShopOrder['shipping_amount'] = $aOrder['total_shipping'];
-        $aShopOrder['base_shipping_incl_tax'] = $aOrder['total_shipping'];
-        $aShopOrder['shipping_incl_tax'] = $aOrder['total_shipping'];
-        $aShopOrder['base_shipping_tax_amount'] = '0';// was always 0 when testing
-        $aShopOrder['shipping_tax_amount'] = '0';// was always 0 when testing
+        $aShopOrder['base_shipping_amount'] = $aShippingInfo['shipping_amount_net'];
+        $aShopOrder['shipping_amount'] = $aShippingInfo['shipping_amount_net'];
+        $aShopOrder['base_shipping_incl_tax'] = $aShippingInfo['shipping_amount_brut'];
+        $aShopOrder['shipping_incl_tax'] = $aShippingInfo['shipping_amount_brut'];
+        $aShopOrder['base_shipping_tax_amount'] = $aShippingInfo['shipping_amount_tax'];
+        $aShopOrder['shipping_tax_amount'] = $aShippingInfo['shipping_amount_tax'];
         $aShopOrder['base_subtotal'] = $dNetBasketSum;
         $aShopOrder['subtotal'] = $dNetBasketSum;
         $aShopOrder['base_tax_amount'] = $dVatOrderSum;
@@ -975,6 +1138,38 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
     }
 
     /**
+     * Get shipping price for given tax configuration
+     *
+     * @param array $aOrder
+     * @param bool  $blIncludeTax
+     * @return double
+     */
+    protected function _getShippingPrice($aOrder, $blIncludeTax = null)
+    {
+        if ($blIncludeTax === true) {
+            return $aOrder['total_shipping']; // brut price
+        }
+
+        $oShippingAddress = null;
+        if (isset($aOrder['shipping_address'])) {
+            $oShippingAddress = $this->_getAddress($aOrder['shipping_address']['country'], $aOrder['shipping_address']['zip']);
+        }
+        $oBillingAddress = null;
+        if (isset($aOrder['billing_address'])) {
+            $oBillingAddress = $this->_getAddress($aOrder['billing_address']['country'], $aOrder['billing_address']['zip']);
+        }
+
+        $oTax = Mage::getSingleton('tax/calculation');
+        $request = $oTax->getRateRequest($oShippingAddress, $oBillingAddress, null, $this->_getStore());
+        $request->setProductClassId(Mage::helper('tax')->getShippingTaxClass($this->_getStore()));
+        $percent = $oTax->getRate($request);
+
+        $dTaxAmount = Mage::helper('tax')->getCalculator()->calcTaxAmount($aOrder['total_shipping'], $percent, true);
+        $dNetPrice = $aOrder['total_shipping'] - $dTaxAmount;
+        return $dNetPrice;
+    }
+
+    /**
      * Fill the data to a orderarticle entity and write it into the DB
      * Returns the entity_id of the orderarticle
      *
@@ -994,11 +1189,18 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
             $sMainId = $sParentId;
         }
 
+        $dVatRate = $this->_getVatRateForProduct($sProductId, $aOrder);
+
         $dBrutPrice = $aOrderarticle['item_price'];
         $dTotalBrutPrice = $aOrderarticle['price'];
-        $dNetPrice = $this->_getNetPrice($dBrutPrice, $aOrder['vat_rate']);
+        $dNetPrice = $this->_getNetPrice($dBrutPrice, $dVatRate);
         $dTotalNetPrice = $dNetPrice * $aOrderarticle['quantity'];
         $dTotalVatAmount = $dTotalBrutPrice - $dTotalNetPrice;
+
+        $dOriginalPrice = $dNetPrice;
+        if (Mage::helper('tax')->priceIncludesTax($this->_getStore())) {
+            $dOriginalPrice = $dBrutPrice;
+        }
 
         //configurable
         $aOrderItem = array();
@@ -1017,9 +1219,9 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         $aOrderItem['qty_ordered'] = $aOrderarticle['quantity'];
         $aOrderItem['price'] = $dNetPrice;
         $aOrderItem['base_price'] = $dNetPrice;
-        $aOrderItem['original_price'] = $dNetPrice;
-        $aOrderItem['base_original_price'] = $dNetPrice;
-        $aOrderItem['tax_percent'] = $aOrder['vat_rate'];
+        $aOrderItem['original_price'] = $dOriginalPrice;
+        $aOrderItem['base_original_price'] = $dOriginalPrice;
+        $aOrderItem['tax_percent'] = $dVatRate;
         $aOrderItem['tax_amount'] = $dTotalVatAmount;
         $aOrderItem['base_tax_amount'] = $dTotalVatAmount;
         $aOrderItem['discount_percent'] = '0';
@@ -1235,7 +1437,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
                         $this->_sendHandleOrderError($aOrder, $this->sLastOrderHandleErrorType);
                         $this->_sendOrderRevocation($aOrder['order_number'], 'MERCHANT_DECLINE', $this->sLastOrderHandleErrorType);
                     }
-                } catch(Exception $oEx) {
+                } catch (Exception $oEx) {
                     $this->_sendHandleOrderError($aOrder, $oEx->getMessage());
                 }
             }
