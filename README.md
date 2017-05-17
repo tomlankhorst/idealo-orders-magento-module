@@ -4,10 +4,10 @@
 Apache License 2.0, see LICENSE
 
 ## Version
-v1.0.2 2016-10-10
+v1.1.5 2016-05-17
 
 ## Link
-http://direktkauf.idealo.de
+http://partner.idealo.com/de/direktkauf/
 
 ## Requirements
 libcurl
