@@ -491,7 +491,7 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
             $iSameAsBilling = $this->_hasDifferentShippingAddress($aOrder) === false ? '1' : '0';
         }
 
-        $dNetOrderSum = $this->_getOrderNetSum();
+        $dNetOrderSum = $this->_getOrderNetSum($aOrder);
 
         $aShippingInfo = $this->_getShippingInfo($aOrder);
 
