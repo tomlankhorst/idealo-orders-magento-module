@@ -94,7 +94,9 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
      */
     protected function _getStoreName()
     {
-        return $this->_getStore()->getFrontendName().' - '.$this->_getStore()->getName();
+        $store = $this->_getStore();
+        $name = array($store->getWebsite()->getName(), $store->getGroup()->getName(), $store->getName());
+        return implode("\n", $name);
     }
     
     /**
