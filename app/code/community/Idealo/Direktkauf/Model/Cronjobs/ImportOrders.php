@@ -1432,7 +1432,20 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
                 try {
                     if ($this->_orderDataIsValid($aOrder)) {
                         $iQuoteId = $this->_addQuote($aOrder);
-                        $this->_handleOrder($aOrder, $iQuoteId);
+                        Mage::dispatchEvent('idealo_direktkauf_import_order_handle_before',
+                            array(
+                                'quote_id' => $iQuoteId,
+                                'idealo_order_object' => $aOrder
+                            )
+                        );
+                        $magentoOrderId = $this->_handleOrder($aOrder, $iQuoteId);
+                        Mage::dispatchEvent('idealo_direktkauf_import_order_handle_after',
+                            array(
+                                'quote_id' => $iQuoteId,
+                                'order_id' => $magentoOrderId,
+                                'idealo_order_object' => $aOrder
+                            )
+                        );
                     } else {
                         $this->_sendHandleOrderError($aOrder, $this->sLastOrderHandleErrorType);
                         $this->_sendOrderRevocation($aOrder['order_number'], 'MERCHANT_DECLINE', $this->sLastOrderHandleErrorType);

@@ -94,7 +94,9 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
      */
     protected function _getStoreName()
     {
-        return $this->_getStore()->getFrontendName().' - '.$this->_getStore()->getName();
+        $store = $this->_getStore();
+        $name = array($store->getWebsite()->getName(), $store->getGroup()->getName(), $store->getName());
+        return implode("\n", $name);
     }
     
     /**
@@ -168,7 +170,7 @@ class Idealo_Direktkauf_Model_Cronjobs_Base
     protected function _insertRecord($aData, $sTableModel)
     {
         $sTable = $this->_getTableName($sTableModel);
-        if ($sTable && is_array($aData) && !empty($aData) > 0) {
+        if ($sTable && is_array($aData) && !empty($aData)) {
             $aData = $this->_checkData($aData, $sTable);
             
             $aFields = array_keys($aData);
