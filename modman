@@ -1,0 +1,7 @@
+lib/idealo/Direktkauf                   lib/idealo/Direktkauf
+app/locale/en_US/Idealo_Direktkauf.csv  app/locale/en_US/Idealo_Direktkauf.csv
+app/locale/de_DE/Idealo_Direktkauf.csv  app/locale/de_DE/Idealo_Direktkauf.csv
+app/etc/modules/Idealo_Direktkauf.xml   app/etc/modules/Idealo_Direktkauf.xml
+app/design/adminhtml/default/default/layout/idealo.xml  app/design/adminhtml/default/default/layout/idealo.xml
+app/design/adminhtml/default/default/template/idealo/direktkauf   app/design/adminhtml/default/default/template/idealo/direktkauf
+app/code/community/Idealo/Direktkauf    app/code/community/Idealo/Direktkauf
