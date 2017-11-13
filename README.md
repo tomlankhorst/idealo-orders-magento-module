@@ -1,5 +1,8 @@
 # idealo Direktkauf Magento 1 Plugin
 
+## Modified for SB Supply, not for general use
+See SB-575
+
 ## License
 Apache License 2.0, see LICENSE
 

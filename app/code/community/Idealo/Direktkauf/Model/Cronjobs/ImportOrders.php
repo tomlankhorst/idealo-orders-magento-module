@@ -840,8 +840,31 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
         }
 
         $sStreet = $aOrder[$sKey]['address1'];
+
+        /**
+         * SB-575 Check for housenumbers and put them on next line
+         * Meeuwenstraat 50 => 50
+         * Remmelinkdijk 1 11a => 1 11a
+         * De Plaats 3-A => 3-A
+         */
+        $pattern = '![0-9]+[a-zA-Z/-]*!';
+        $matches = [];
+        preg_match($pattern, $sStreet, $matches, PREG_OFFSET_CAPTURE );
+
+        if($matches){
+            $sHousenumber   = trim(substr( $sStreet, $matches[0][1] ));
+            $sStreet        = trim(substr( $sStreet, 0, $matches[0][1]-1));
+        } else {
+            $sHousenumber   = '';
+        }
+
+        $sStreet .= "\n" . $sHousenumber;
+
         if (!empty($aOrder[$sKey]['address2'])) {
-            $sStreet .= "\n".$aOrder[$sKey]['address2'];
+            if($sHousenumber){
+                $sStreet .= ' ';
+            }
+            $sStreet .= $aOrder[$sKey]['address2'];
         }
 
         $aAddress = array();
