@@ -1470,7 +1470,9 @@ class Idealo_Direktkauf_Model_Cronjobs_ImportOrders extends Idealo_Direktkauf_Mo
                             )
                         );
                         // SB-621 Trigger save event after import!
-                        Mage::getModel('sales/order')->load($magentoOrderId)->save();
+                        $order = Mage::getModel('sales/order')->load($magentoOrderId);
+                        $order->setDataChanged(true);
+                        $order->save();
                     } else {
                         $this->_sendHandleOrderError($aOrder, $this->sLastOrderHandleErrorType);
                         $this->_sendOrderRevocation($aOrder['order_number'], 'MERCHANT_DECLINE', $this->sLastOrderHandleErrorType);
